@@ -221,11 +221,38 @@ int c_check(int argc, char** argv) {
             printf("usage: %s check <repo/package> (optional: repo name)\n", argv[0]);return 1;
         }
         char* p = get_config_path();
-        char* cmd = malloc(6 + strlen(p) + strlen(argv[3]));
-        sprintf(cmd, "cat %s/%s", p, argv[3]);
+        char* cpath = malloc(2 + strlen(p) + strlen(argv[3]));
+        sprintf(cpath, "%s/%s", p, argv[3]);
+        printf("%s\n", cpath);
+        free(p);
+        FILE *fptr = fopen(cpath, "r");
+        fseek(fptr, 0, SEEK_END);
+        long file_size = ftell(fptr);
+        rewind(fptr);
+        char* repo = malloc(file_size+1);
+        fread(repo, 1, file_size, fptr);
+        int repol = strlen(repo);
+        char* line = malloc(100);
+        int linep = 0;
         printf("packages in %s list:\n\x1b[32m", argv[3]);fflush(stdout);
-        system(cmd);
+        for (int i = 0; i < repol; i++) {
+            linep = 0;
+            while (repo[i] != '\n' && repo[i] != 0) {
+                line[linep] = repo[i];
+                i++;
+                linep++;
+            }
+            line[linep] = 0;
+            if (strlen(line) == 0) 
+                continue;
+            char** sp = strsplit(line);
+            if (strcmp(sp[0], "title")) {
+                printf("%s\n", sp[0]);
+            }
+            free_strlist(sp, 2);
+        }
         printf("\x1b[0m");fflush(stdout);
+        return 0;
     }
     return 3;
 }
